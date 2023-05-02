@@ -1,0 +1,26 @@
+/*
+
+Add styles or override variables from the theme here.
+
+*/
+$primary: #54526d;
+
+$secondary: #A97079 !default;
+$success: #8AFF80 !default;
+$info: #70A99F !default;
+$warning: #FF80BF !default;
+$danger: #FF9580 !default;
+$light: #9580FF !default;
+$dark: #403f4c !default;
+
+$navbar-dark-color: #70A99F;
+$navbar-dark-hover-color: #9580FF;
+
+$navbar-light-color: $dark;
+$navbar-light-hover-color: #9580FF;
+
+$link-color: #9580FF;
+
+$td-sidebar-tree-root-color: $primary !default;
+$td-sidebar-bg-color: rgba($primary, 0.05) !default;
+$border-color: rgba($dark, 0.2) !default;

@@ -1,0 +1,20 @@
+##
+## Visual Studio Code
+##
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+##
+## Hugo
+##
+/public
+resources/
+node_modules/
+package-lock.json
+.hugo_build.lock
+
+.DS_Store
+hobby-meat.code-workspace
