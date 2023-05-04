@@ -1,6 +1,0 @@
-+++
-title = "Beach"
-description = '''
-
-'''
-+++

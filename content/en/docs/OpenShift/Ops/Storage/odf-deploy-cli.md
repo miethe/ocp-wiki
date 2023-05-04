@@ -1,0 +1,402 @@
++++
+title = "Deploying ODF w/ CLI"
+description = '''
+Deploy ODF on OCP without GUI
+'''
+categories = ["Engineering", "Lab"]
+tags = ["OpenShift", "Storage", "ODF", "Ceph", "Deployment Guide"]
+lab_topics = ["OpenShift", "Storage", "ODF", "Ceph"]
++++
+
+## Overview
+
+-------
+
+**OpenShift Data Foundation** (ODF) works in conjunction with the [Local Storage
+Operator](https://docs.openshift.com/container-platform/4.9/storage/persistent_storage/persistent-storage-local.html) to use disks and devices on AWS EC2, VMware, Azure, Bare Metal hosts, etc.
+
+{{% alert title="Requirements" color="warning" %}}
+These instructions require that you have the ability to install at least v4.9 for both ODF and the Local Storage Operator (LSO).
+{{% /alert %}}
+
+## Installing the Local Storage Operator
+
+-------
+
+First, you will need to create a namespace for the Local Storage
+Operator. A self descriptive `openshift-local-storage` namespace is
+recommended.
+
+``` yaml
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-local-storage
+spec: {}
+EOF
+```
+
+Create Operator Group for Local Storage Operator.
+
+``` yaml
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: local-operator-group
+  namespace: openshift-local-storage
+spec:
+  targetNamespaces:
+  - openshift-local-storage
+EOF
+```
+
+Subscribe to Local Storage Operator and create the operator **Pod**.
+
+``` yaml
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: local-storage-operator
+  namespace: openshift-local-storage
+spec:
+  channel: "stable"
+  installPlanApproval: Automatic
+  name: local-storage-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+```
+
+### Preparing Nodes
+
+You will need to add the `ODF label` to each OCP node that has storage
+devices used to create the ODF storage cluster. The ODF operator looks
+for this label to know which nodes can be scheduling targets for ODF
+components. Later we will configure Local Storage Operator
+`Custom Resources` to create **PVs** from storage devices on nodes with
+this label. You must have a minimum of three labeled nodes with the same
+number of devices or disks with similar performance capability. SSDs or
+NVMe devices are highly recommended to create the ODF storage cluster.
+
+To label the nodes use the following command:
+
+``` bash
+oc label node <NodeName> cluster.ocs.openshift.io/openshift-storage=''
+```
+
+Make sure to label OCP nodes in 3 different AWS availability zones if
+ODF installation is on AWS.
+
+### Auto Discovering Devices and creating Persistent Volumes
+
+Local Storage Operator (LSO 4.6+) supports discovery of devices on OCP
+nodes with the label `cluster.ocs.openshift.io/openshift-storage=""`.
+Create the `LocalVolumeDiscovery` resource using this file after the OCP
+nodes are labeled with the `ODF label`.
+
+``` yaml
+cat <<EOF | oc apply -f -
+apiVersion: local.storage.openshift.io/v1alpha1
+kind: LocalVolumeDiscovery
+metadata:
+  name: auto-discover-devices
+  namespace: openshift-local-storage
+spec:
+  nodeSelector:
+    nodeSelectorTerms:
+      - matchExpressions:
+        - key: cluster.ocs.openshift.io/openshift-storage
+          operator: Exists
+EOF
+```
+
+After this resource is created you should see a new
+`localvolumediscoveries` resource and there will be a
+`localvolumediscoveryresults` for each OCP node labeled with the
+`ODF label`. Each `localvolumediscoveryresults` will have the detail for
+each disk on the node including the `by-id`, size and type of disk.
+
+### Create LocalVolumeSet
+
+The disk are recommended to be SSDs or NVMe disks and must be raw block
+devices. This is due to the fact that the operator creates distinct
+partitions on the provided raw block devices for the metadata and data.
+
+Use this file `localvolumeset.yaml` to create the `LocalVolumeSet`.
+Configure the parameters with comments to meet the needs of your
+environment.
+
+``` yaml
+apiVersion: local.storage.openshift.io/v1alpha1
+kind: LocalVolumeSet
+metadata:
+  name: local-block
+  namespace: openshift-local-storage
+spec:
+  nodeSelector:
+    nodeSelectorTerms:
+      - matchExpressions:
+          - key: cluster.ocs.openshift.io/openshift-storage
+            operator: In
+            values:
+              - ""
+  storageClassName: localblock
+  volumeMode: Block
+  fstype: ext4
+  maxDeviceCount: 1  # <-- Maximum number of devices per node to be used
+  deviceInclusionSpec:
+    deviceTypes:
+    - disk
+    - part   # <-- Remove this if not using partitions
+    deviceMechanicalProperties:
+    - NonRotational   # <-- For HDD change to Rotational
+    #minSize: 0Ti   # <-- Uncomment and modify to limit the minimum size of disk used
+    #maxSize: 0Ti   # <-- Uncomment and modify to limit the maximum size of disk used
+```
+
+``` bash
+oc create -f localvolumeset.yaml
+```
+
+After the `localvolumesets` resource is created check that `Available`
+**PVs** are created for each disk on OCP nodes with the `ODF label`. It
+can take a few minutes until all disks appear as **PVs** while the Local
+Storage Operator is preparing the disks.
+
+## Installing OpenShift Data Foundation
+
+-------
+
+These instructions are used after ODF is generally available (GA). If
+you have a need to install pre-release ODF different instructions are
+required as well as access to pre-release entitled registries.
+
+### Install Operator
+
+Create `openshift-storage` namespace.
+
+``` yaml
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    openshift.io/cluster-monitoring: "true"
+  name: openshift-storage
+spec: {}
+EOF
+```
+
+Create Operator Group for ODF Operator.
+
+``` yaml
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-storage-operatorgroup
+  namespace: openshift-storage
+spec:
+  targetNamespaces:
+  - openshift-storage
+EOF
+```
+
+Subscribe to ODF Operator.
+
+``` yaml
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: odf-operator
+  namespace: openshift-storage
+spec:
+  channel: "stable-4.11"
+  installPlanApproval: Automatic
+  name: odf-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+```
+
+After the operator **Pods** are `Running` in the `openshift-storage`
+project, the next step is to enable the console plugin. Execute the
+following command:
+
+``` bash
+oc patch console.operator cluster -n openshift-storage --type json -p '[{"op": "add", "path": "/spec/plugins", "value": ["odf-console"]}]'
+```
+
+### Create Cluster
+
+Reference [here](https://github.com/red-hat-storage/ocs-operator/blob/main/deploy/csv-templates/crds/ocs/ocs.openshift.io_storageclusters.yaml) for more **StorageCluster** options.
+
+Under the `managedResources` section is the default setting of `manage`
+for ODF services (i.e., block, file, object using RGW, object using
+NooBaa). This means any changes to ODF `CustomResources` (CRs) will
+always reconcile back to default values. The other choices instead of
+`manage` are `init` and `ignore`. The setting of `init` for the service
+(i.e., cephBlockPools) will not reconcile back to default if changes are
+made to the ODF CR definition. The setting of `ignore` will not deploy
+the particular service.
+
+``` yaml
+apiVersion: ocs.openshift.io/v1
+kind: StorageCluster
+metadata:
+  name: ocs-storagecluster
+  namespace: openshift-storage
+spec:
+  arbiter: {}
+  encryption:
+    kms: {}
+  externalStorage: {}
+  flexibleScaling: true
+  resources:
+    mds:
+      limits:
+        cpu: "3"
+        memory: "8Gi"
+      requests:
+        cpu: "3"
+        memory: "8Gi"
+  monDataDirHostPath: /var/lib/rook
+  managedResources:
+    cephBlockPools:
+      reconcileStrategy: manage   # <-- Default value is manage
+    cephConfig: {}
+    cephFilesystems: {}
+    cephObjectStoreUsers: {}
+    cephObjectStores: {}
+  multiCloudGateway:
+    reconcileStrategy: manage   # <-- Default value is manage
+  storageDeviceSets:
+  - count: 1  # <-- Modify count to desired value. For each set of 3 disks increment the count by 1.
+    dataPVCTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: "100Mi"
+        storageClassName: localblock
+        volumeMode: Block
+    name: ocs-deviceset
+    placement: {}
+    portable: false
+    replica: 3
+    resources:
+      limits:
+        cpu: "2"
+        memory: "5Gi"
+      requests:
+        cpu: "2"
+        memory: "5Gi"
+```
+
+``` bash
+oc create -f storagecluster.yaml
+```
+
+## Verifying the Installation
+
+-------
+
+Deploy the Rook-Ceph toolbox pod.
+
+``` bash
+oc patch OCSInitialization ocsinit -n openshift-storage --type json --patch  '[{ "op": "replace", "path": "/spec/enableCephTools", "value": true }]'
+```
+
+Establish a remote shell to the toolbox pod.
+
+``` bash
+TOOLS_POD=$(oc get pods -n openshift-storage -l app=rook-ceph-tools -o name)
+
+oc rsh -n openshift-storage $TOOLS_POD
+```
+
+Run `ceph status` and `ceph osd tree` to see that status of the Ceph cluster.
+
+``` bash
+ceph status
+
+ceph osd tree
+```
+
+Make sure to `exit` the toolbox pod.
+
+### Create test CephRBD PVC and CephFS PVC
+
+``` yaml
+cat <<EOF | oc apply -f -
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rbd-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: ocs-storagecluster-ceph-rbd
+EOF
+```
+
+Validate new PVC is created.
+
+``` yaml
+oc get pvc | grep rbd-pvc
+
+cat <<EOF | oc apply -f -
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cephfs-pvc
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: ocs-storagecluster-cephfs
+EOF
+```
+
+Validate new PVC is created.
+
+``` bash
+oc get pvc | grep cephfs-pvc
+```
+
+## Upgrade from OCS 4.10 to ODF 4.11
+
+-------
+
+{{< box info >}}
+  ODF 4.11.0 is primarily for new customers or new clusters within
+existing customers.
+{{< /box >}}
+
+Due to an upgrade issue in Red Hat Ceph Storage RGW, existing customers
+using ODF 4.10 will be unable to upgrade to ODF 4.11 until a fix is
+provided in ODF 4.11.x, based on Red Hat Ceph Storage 5.3. More
+technical information on this upgrade issue can be found
+[here](https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/5.2/html/release_notes/known-issues#known-issue_ceph-object-gateway).
+
+Existing customers who need ODF 4.11 urgently and are not currently
+using ODF object storage, or are running ODF in the cloud, should
+contact Red Hat support for upgrade instructions. Customers who are new
+to ODF with the 4.11 release, or existing ODF 4.10 customers deploying
+ODF 4.11.0 onto new clusters, are unaffected by this upgrade problem.
+
+## References
+
+Thank you to the Red Hat Data Services team for making [this guide](https://red-hat-storage.github.io/ocs-training/training/ocs4/odf4-install-no-ui.html) available.

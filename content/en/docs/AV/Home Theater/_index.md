@@ -1,6 +1,0 @@
-+++
-title = "Home Theater"
-description = '''
-
-'''
-+++

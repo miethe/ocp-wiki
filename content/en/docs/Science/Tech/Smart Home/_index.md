@@ -1,6 +1,0 @@
-+++
-title = "Smart Home"
-description = '''
-
-'''
-+++

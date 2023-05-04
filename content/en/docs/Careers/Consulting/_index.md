@@ -1,6 +1,0 @@
-+++
-title = "Consulting"
-description = '''
-
-'''
-+++

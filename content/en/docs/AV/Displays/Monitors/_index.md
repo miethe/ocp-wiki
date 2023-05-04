@@ -1,5 +1,0 @@
-+++
-title = "Computer Monitors"
-description = '''
-'''
-+++

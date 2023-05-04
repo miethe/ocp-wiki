@@ -1,6 +1,0 @@
-+++
-title = "Board Gaming"
-description = '''
-
-'''
-+++

@@ -1,6 +1,0 @@
-+++
-title = "Wine"
-description = '''
-
-'''
-+++

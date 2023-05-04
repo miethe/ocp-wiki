@@ -1,19 +1,17 @@
 +++
-title = "Meatopedia"
+title = "OCPedia"
 weight = 2
 description = '''
-Learn a little bit about basically everything.
+Learn everything about OpenShift
 '''
 +++
 
 ## Welcome
 
-If this is your first time here, then take a moment to consider **why** you're here. Perhaps you're like me, and the only hobby you've ever stuck with is the collection of more hobbies. Or maybe you're looking for information on your primary hobby, or a new hobby that you're researching.
-
-Whatever the case, welcome to **The Distracted Hobbyist!**
+You might be wondering, why should I come here to learn about specific OpenShift features vs the official [OpenShift Documentation](https://docs.openshift.com/container-platform/{{< param "ocp_version" >}}/welcome/index.html)? The answer is, you shouldn't! But things don't have to be either/or in the realm of documentation and blogs!
 
 ## Overview
 
-I started this site to document and organize the in-depth research I've done over the years on a wide selection of fields. But then I realized the value that this information could have for others! While I might not return to a given hobby any time soon, if someone else could receive value from the time investment becoming an overnight expert on (insert hobby of choice here), then at least it wouldn't be time wasted!
+Nothing can replace good documentation. And this site isn't meant to replace anything else. Rather, the goal is for it to subsidize and enhance existing materials available.
 
-This site is organized as well as mind would allow. Within each section, you will generally find more sections! So dig in, explore the wealth of content, and find your next favorite hobby!
+In particular, the materials in this site will often focus on the intersection between Red Hat {{< icons/redhat >}} technologies and 3rd parties, such as Tekton Pipelines-as-Code with GitHub Actions or GitLab.

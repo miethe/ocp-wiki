@@ -1,5 +1,5 @@
-baseURL = "https://distractedhobbyists.com"
-title = "Hobby Meat"
+baseURL = "https://openshift.blog"
+title = "OCP Blog"
 
 # Language settings
 contentDir = "content/en"
@@ -13,7 +13,7 @@ enableRobotsTXT = true
 # Will give values to .Lastmod etc.
 enableGitInfo = true
 
-refLinksNotFoundURL = "https://distractedhobbyists.com"
+refLinksNotFoundURL = "https://openshift.blog"
 refLinksErrorLevel = "WARNING"
 
 # Configure how URLs look like per section.
@@ -35,7 +35,7 @@ anchor = "smart"
 
 [languages]
 [languages.en]
-title = "Distracted Hobbyists"
+title = "MeatyBytes"
 description = "One Wiki"
 languageName ="English"
 # Weight used for sorting.
@@ -80,9 +80,11 @@ archived_version = false
 # current doc set.
 version = "0.4"
 
+ocp_version = "4.13"
+
 # A link to latest version of the docs. Used in the "version-banner" partial to
 # point people to the main doc site.
-url_latest_version = "https://distractedhobbyists.com"
+url_latest_version = "https://openshift.blog"
 
 # Repository configuration (URLs for in-page links to opening issues and suggesting changes)
 github_repo = "https://github.com/miethe/hobby-meat"
@@ -120,11 +122,11 @@ taxonomyCloudTitle = ["Tags", "Categories"]
 taxonomyPageHeader = ["tags", "categories"]
 
 [[menu.main]]
-    name = "Meatopedia"
+    name = "OCPedia"
     weight = 10
     url = "/docs/"
 [[menu.main]]
-    name = "Blog"
+    name = "OCP Blog"
     weight = 20
     url = "/blog/"
 [[menu.main]]
@@ -174,12 +176,25 @@ enable = false
   icon = "fab fa-twitter"
   desc = "Follow us on Twitter to get the latest news!"
 
+[[params.links.user]]
+  name = "LinkedIn"
+  url = "https://www.linkedin.com/in/miethe/"
+  icon = "fab fa-linkedin"
+  desc = "Development takes place here!"
+
 # Developer relevant links. These will show up on right side of footer and in the community page if you have one.
 [[params.links.developer]]
   name = "GitHub"
   url = "https://github.com/miethe"
   icon = "fab fa-github"
   desc = "Development takes place here!"
+
+[[params.links.developer]]
+  name = "DistractedHobbyist"
+  url = "https://distractedhobbyists.com"
+  icon = "fa-regular fa-moon"
+  desc = "Development takes place here!"
+
 
 # hugo module configuration
 
