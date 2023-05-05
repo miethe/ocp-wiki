@@ -4,6 +4,7 @@ date = 2023-04-26
 description = '''
 Learn to optimize your OCP clusters for network latency
 '''
+tags = ["OpenShift", "Network", "Optimization", "MCO"]
 author = "Nick Miethe"
 +++
 
