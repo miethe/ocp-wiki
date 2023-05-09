@@ -126,9 +126,9 @@ taxonomyPageHeader = ["tags", "categories"]
     weight = 10
     url = "/docs/"
 [[menu.main]]
-    name = "OCP Blog"
+    name = "Blog"
     weight = 20
-    url = "/blog/"
+    url = "https://meatybytes.io/"
 [[menu.main]]
     name = "About"
     weight = 30
