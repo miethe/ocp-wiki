@@ -129,10 +129,6 @@ taxonomyPageHeader = ["tags", "categories"]
     name = "Blog"
     weight = 20
     url = "https://meatybytes.io/"
-[[menu.main]]
-    name = "About"
-    weight = 30
-    url = "/about/"
 
 # User interface configuration
 [params.ui]
