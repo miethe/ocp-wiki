@@ -1,5 +1,5 @@
 baseURL = "https://openshift.blog"
-title = "OCP Blog"
+title = "OCPedia"
 
 # Language settings
 contentDir = "content/en"
@@ -35,7 +35,7 @@ anchor = "smart"
 
 [languages]
 [languages.en]
-title = "MeatyBytes"
+title = "OCPedia"
 description = "One Wiki"
 languageName ="English"
 # Weight used for sorting.
@@ -87,7 +87,7 @@ ocp_version = "4.13"
 url_latest_version = "https://openshift.blog"
 
 # Repository configuration (URLs for in-page links to opening issues and suggesting changes)
-github_repo = "https://github.com/miethe/hobby-meat"
+github_repo = "https://github.com/miethe/ocp-wiki"
 # An optional link to a related project repo. For example, the sibling repository where your product code lives.
 # github_project_repo = "https://github.com/miethe/hobby-meat"
 
